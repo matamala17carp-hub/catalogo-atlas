@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options?: any }[]) {
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options)
           })
@@ -25,14 +25,14 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!user) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
+  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
 
-    if (user.user_metadata?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/', request.url))
-    }
+  if (isAdminRoute && !user) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  if (isAdminRoute && user?.user_metadata?.role !== 'admin') {
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   return response
